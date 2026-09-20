@@ -52,7 +52,11 @@ def musicxml_to_midi(xml_path, midi_path):
     track = mido.MidiTrack()
     mid.tracks.append(track)
     track.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(tempo), time=0))
-    track.append(mido.MetaMessage('key_signature', key=key_fifths, time=0))
+    fifths_to_key = {
+        -7: 'Cb', -6: 'Gb', -5: 'Db', -4: 'Ab', -3: 'Eb', -2: 'Bb', -1: 'F',
+        0: 'C', 1: 'G', 2: 'D', 3: 'A', 4: 'E', 5: 'B', 6: 'F#', 7: 'C#'
+    }
+    track.append(mido.MetaMessage('key_signature', key=fifths_to_key.get(key_fifths, 'C'), time=0))
     track.append(mido.MetaMessage('time_signature', numerator=time_beats, denominator=time_beat_type, time=0))
 
     pitch_names = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
