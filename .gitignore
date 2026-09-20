@@ -3,3 +3,8 @@
 *.import
 export/
 *.translation
+.godot/
+_temp_frames/
+generated_*
+result.json
+sheet.png
