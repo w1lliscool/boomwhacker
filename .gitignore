@@ -1,1 +1,5 @@
 .gh-token
+.import/
+*.import
+export/
+*.translation

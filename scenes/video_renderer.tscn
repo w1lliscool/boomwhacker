@@ -1,0 +1,138 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/video_renderer.gd" id="1"]
+
+[node name="VideoRenderer" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = 1
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+size = Vector2i(1920, 1080)
+render_target_update_mode = 3
+transparent_bg = true
+unique_name_in_owner = true
+
+[node name="BGTex" type="TextureRect" parent="SubViewportContainer/SubViewport"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 3
+stretch_mode = 6
+unique_name_in_owner = true
+
+[node name="MusicStrip" type="TextureRect" parent="SubViewportContainer/SubViewport"]
+layout_mode = 1
+offset_left = 0.0
+offset_top = 240.0
+offset_right = 1920.0
+offset_bottom = 840.0
+expand_mode = 0
+stretch_mode = 0
+unique_name_in_owner = true
+
+[node name="ScrollerLine" type="ColorRect" parent="SubViewportContainer/SubViewport"]
+layout_mode = 1
+offset_left = 957.0
+offset_top = 0.0
+offset_right = 963.0
+offset_bottom = 1080.0
+color = Color(0.9, 0.15, 0.15, 0.7)
+unique_name_in_owner = true
+
+[node name="IntroCard" type="Control" parent="SubViewportContainer/SubViewport"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+unique_name_in_owner = true
+
+[node name="IntroBG" type="ColorRect" parent="SubViewportContainer/SubViewport/IntroCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.12, 0.15, 0.95)
+
+[node name="GlassPanel" type="PanelContainer" parent="SubViewportContainer/SubViewport/IntroCard"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -180.0
+offset_right = 350.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBox" type="HBoxContainer" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="CoverTex" type="TextureRect" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(200, 200)
+expand_mode = 3
+stretch_mode = 5
+
+[node name="VBox" type="VBoxContainer" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel/HBox/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Song Title"
+
+[node name="ArtistLabel" type="Label" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel/HBox/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Artist"
+
+[node name="DurationLabel" type="Label" parent="SubViewportContainer/SubViewport/IntroCard/GlassPanel/HBox/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "0:00"
+
+[node name="FadeToBlack" type="ColorRect" parent="SubViewportContainer/SubViewport"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+mouse_filter = 2
+unique_name_in_owner = true
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
