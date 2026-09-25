@@ -92,16 +92,37 @@ def parse_musicxml_notes(xml_path):
     measure_num = 0
     for part in root.iter(t('part')):
         current_beat = 0.0
-        measure_beat = 0.0
         measure_num = 0
         for measure in part.iter(t('measure')):
-            measure_beat = 0.0
             measure_num += 1
             bar_times.append({
                 "bar": measure_num,
-                "time_sec": (current_beat) * 60.0 / tempo,
+                "time_sec": current_beat * 60.0 / tempo,
             })
-            for note in measure.iter(t('note')):
+            cursor_div = 0
+            last_chord_div = {}
+            measure_beats = 4.0
+            for attr in measure.iter(t('attributes')):
+                time_el = attr.find(t('time'))
+                if time_el is not None:
+                    beats_el = time_el.find(t('beats'))
+                    if beats_el is not None and beats_el.text:
+                        measure_beats = float(beats_el.text)
+            for child in measure:
+                tag = child.tag.replace(ns, '') if ns else child.tag
+                if child.tag != t('backup') and child.tag != t('forward') and child.tag != t('note'):
+                    continue
+                if child.tag == t('backup'):
+                    dur_el = child.find(t('duration'))
+                    dur = int(dur_el.text) if dur_el is not None and dur_el.text else 0
+                    cursor_div -= dur
+                    continue
+                if child.tag == t('forward'):
+                    dur_el = child.find(t('duration'))
+                    dur = int(dur_el.text) if dur_el is not None and dur_el.text else 0
+                    cursor_div += dur
+                    continue
+                note = child
                 is_rest = note.find(t('rest')) is not None
                 is_chord = note.find(t('chord')) is not None
                 is_grace = note.find(t('grace')) is not None
@@ -109,14 +130,28 @@ def parse_musicxml_notes(xml_path):
                 dur = int(dur_el.text) if dur_el is not None and dur_el.text else 0
                 if is_grace:
                     continue
-                if not is_rest and dur > 0:
+                voice_el = note.find(t('voice'))
+                voice = voice_el.text.strip() if voice_el is not None and voice_el.text else '1'
+                if is_rest:
+                    cursor_div += dur
+                    continue
+                if is_chord:
+                    start_div = last_chord_div.get(voice, cursor_div)
+                    if dur > 0:
+                        all_notes.append({
+                            "time_beats": current_beat + start_div / divisions,
+                            "duration_beats": dur / divisions,
+                        })
+                    continue
+                start_div = cursor_div
+                last_chord_div[voice] = cursor_div
+                cursor_div += dur
+                if dur > 0:
                     all_notes.append({
-                        "time_beats": current_beat + measure_beat,
+                        "time_beats": current_beat + start_div / divisions,
                         "duration_beats": dur / divisions,
                     })
-                if not is_chord:
-                    measure_beat += dur / divisions
-            current_beat += measure_beat
+            current_beat += measure_beats
 
     all_notes.sort(key=lambda n: n["time_beats"])
     for note in all_notes:
@@ -132,19 +167,23 @@ def build_scroll_map(svg_notes, xml_notes, total_time):
     scroll_map = []
     if not svg_notes or not xml_notes:
         return scroll_map, total_time
-    count = min(len(svg_notes), len(xml_notes))
-    if count == 0:
-        return scroll_map, total_time
+    n_svg = len(svg_notes)
+    n_xml = len(xml_notes)
     first_x = svg_notes[0]["x"]
     scroll_map.append({"time": 0.0, "x": first_x})
-    for i in range(count):
+    for i in range(1, n_xml):
+        if n_svg == n_xml:
+            svg_idx = i
+        else:
+            svg_idx = int(round(float(i) * (n_svg - 1) / (n_xml - 1)))
+        svg_idx = min(svg_idx, n_svg - 1)
         scroll_map.append({
             "time": xml_notes[i]["time_sec"],
-            "x": svg_notes[i]["x"]
+            "x": svg_notes[svg_idx]["x"]
         })
     scroll_map.sort(key=lambda e: e["time"])
-    last_x = svg_notes[count - 1]["x"]
-    scroll_map.append({"time": total_time, "x": last_x + (last_x - first_x) * 0.1})
+    last_x = svg_notes[n_svg - 1]["x"]
+    scroll_map.append({"time": total_time, "x": last_x})
     return scroll_map, total_time
 
 
@@ -178,9 +217,31 @@ if __name__ == "__main__":
     trimmed_path = os.path.join(output_dir, "trimmed.svg")
     png_path = os.path.join(output_dir, "sheet.png")
 
+    MAX_TEX_WIDTH = 16384
+
     trim_data = trim_svg(svg_path, trimmed_path)
     svg_notes = extract_note_positions(trimmed_path)
     ok, pw, ph = render_svg_to_png(trimmed_path, png_path, scale=0.5)
+
+    # Split PNG into tiles if wider than Godot's max texture width
+    tile_paths = []
+    tile_widths = []
+    if pw > MAX_TEX_WIDTH and ok:
+        img = Image.open(png_path)
+        num_tiles = (pw + MAX_TEX_WIDTH - 1) // MAX_TEX_WIDTH
+        for i in range(num_tiles):
+            x_start = i * MAX_TEX_WIDTH
+            x_end = min((i + 1) * MAX_TEX_WIDTH, pw)
+            tile = img.crop((x_start, 0, x_end, ph))
+            tile_path = os.path.join(output_dir, f"sheet_tile_{i}.png")
+            tile.save(tile_path)
+            tile_paths.append(tile_path)
+            tile_widths.append(x_end - x_start)
+        os.remove(png_path)
+        png_path = tile_paths[0] if tile_paths else png_path
+    else:
+        tile_paths = [png_path]
+        tile_widths = [pw] if ok else [0]
 
     xml_notes = []
     total_time = 0.0
@@ -197,6 +258,8 @@ if __name__ == "__main__":
         "trimmed_svg": trimmed_path,
         "png_width": pw,
         "png_height": ph,
+        "tile_paths": tile_paths,
+        "tile_widths": tile_widths,
         "scroll_map": scroll_map,
         "tempo": tempo,
         "total_time": total_time,
