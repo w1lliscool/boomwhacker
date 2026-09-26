@@ -1,4 +1,4 @@
-import re, os, sys, json
+import re, os, sys, json, traceback
 import xml.etree.ElementTree as ET
 from resvg_py import svg_to_bytes
 from PIL import Image
@@ -209,7 +209,7 @@ def render_svg_to_png(svg_path, output_png, scale=1.0):
         return False, 0, 0
 
 
-if __name__ == "__main__":
+def main():
     svg_path = sys.argv[1]
     output_dir = sys.argv[2]
     xml_path = sys.argv[3] if len(sys.argv) > 3 else ""
@@ -254,11 +254,11 @@ if __name__ == "__main__":
     result = {
         "trim": trim_data,
         "notes": svg_notes,
-        "png": png_path,
-        "trimmed_svg": trimmed_path,
+        "png": os.path.basename(png_path),
+        "trimmed_svg": os.path.basename(trimmed_path),
         "png_width": pw,
         "png_height": ph,
-        "tile_paths": tile_paths,
+        "tile_paths": [os.path.basename(p) for p in tile_paths],
         "tile_widths": tile_widths,
         "scroll_map": scroll_map,
         "tempo": tempo,
@@ -268,3 +268,15 @@ if __name__ == "__main__":
     with open(result_path, 'w') as f:
         json.dump(result, f)
     print(f"OK: {len(svg_notes)} svg notes, {len(xml_notes)} xml notes, {len(scroll_map)} scroll points, tempo={tempo}, total={total_time:.1f}s")
+    print(f"  sheet {pw}x{ph}px in {len(tile_paths)} tile(s), source svg {os.path.basename(svg_path)}")
+
+
+if __name__ == "__main__":
+    # The app can only read stdout from a child process, so a traceback on stderr
+    # would reach it as a bare "exit 1". Report failures where they will be seen.
+    try:
+        main()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+        sys.stdout.flush()
+        sys.exit(1)

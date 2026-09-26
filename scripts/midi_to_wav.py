@@ -55,7 +55,7 @@ def midi_to_wav(midi_path, wav_path, sample_rate=44100):
     timed_events = []
     for etype, tick, note, vel in events:
         timed_events.append((ticks_to_seconds(tick), etype, note, vel))
-    timed_events.sort(key=lambda x: x[0])
+    timed_events.sort(key=lambda x: (x[0], 0 if x[1] == 'off' else 1))
 
     if not timed_events:
         print("ERROR: No MIDI events found")

@@ -5,6 +5,11 @@ export/
 *.translation
 .godot/
 _temp_frames/
+_temp_chunks/
+count_in_clicks.wav
 generated_*
 result.json
 sheet.png
+sheet_tile_*.png
+# Rendered output and editor scratch, not source.
+*.mp4

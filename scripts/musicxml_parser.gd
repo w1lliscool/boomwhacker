@@ -26,6 +26,8 @@ func parse(xml_path: String) -> void:
 				match tag:
 					"part":
 						current_part = _attr(parser, "id")
+						current_beat = 0.0
+						measure_beat = 0.0
 					"measure":
 						in_measure = true
 						measure_beat = 0.0
