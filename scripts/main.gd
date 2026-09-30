@@ -330,7 +330,7 @@ func _audio_length() -> float:
 		"wav":
 			stream = AudioStreamWAV.load_from_file(audio_path)
 		"ogg":
-			stream = AudioStreamOggVorbia.load_from_file(audio_path)
+			stream = AudioStreamOggVorbis.load_from_file(audio_path)
 	if stream == null:
 		return 0.0
 	return stream.get_length()
